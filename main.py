@@ -2,7 +2,7 @@ import requests
 import time
 from playwright.sync_api import sync_playwright
 
-TELEGRAM_TOKEN = 8787967605:AAGTA8NlxbPSR2jHh8ONVz7ZvnByuRmKU6I
+TELEGRAM_TOKEN = "8787967605:AAGTA8NlxbPSR2jHh8ONVz7ZvnByuRmKU6I"
 CHAT_ID = "8172803404"
 
 def send(msg):
