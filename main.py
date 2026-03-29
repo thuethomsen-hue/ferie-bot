@@ -1,11 +1,10 @@
 import requests
 import time
-import re
 
 TELEGRAM_TOKEN = "8787967605:AAGTA8NlxbPSR2jHh8ONVz7ZvnByuRmKU6I"
 CHAT_ID = "8172803404"
 
-URL = "https://www.apollorejser.dk/spanien/fuerteventura/playitas-resort"
+API_URL = "https://www.apollorejser.dk/api/search"
 
 def send(msg):
     requests.post(
@@ -15,28 +14,40 @@ def send(msg):
 
 def get_price():
     try:
-        headers = {
-            "User-Agent": "Mozilla/5.0"
+        payload = {
+            "destination": "Fuerteventura",
+            "hotel": "Playitas Resort",
+            "departureDate": "2026-05-19",
+            "returnDate": "2026-05-26",
+            "adults": 2,
+            "children": [
+                {"age": 5},
+                {"age": 9},
+                {"age": 11}
+            ]
         }
 
-        r = requests.get(URL, headers=headers)
-        text = r.text
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+            "Content-Type": "application/json"
+        }
 
-        # Find alle priser
-        prices = re.findall(r"\d{1,3}(?:\.\d{3})+ ?kr", text)
+        r = requests.post(API_URL, json=payload, headers=headers)
 
-        # Filtrer realistiske feriepriser
-        cleaned = []
-        for p in prices:
-            number = int(p.replace(".", "").replace("kr", "").strip())
-            if 3000 < number < 50000:
-                cleaned.append(number)
+        data = r.json()
 
-        if not cleaned:
+        # 🔥 Find pris i response
+        prices = []
+
+        if "results" in data:
+            for item in data["results"]:
+                if "price" in item:
+                    prices.append(item["price"])
+
+        if not prices:
             return "Ingen pris fundet"
 
-        # Tag laveste pris
-        best_price = min(cleaned)
+        best_price = min(prices)
 
         return f"{best_price:,}".replace(",", ".") + " kr"
 
@@ -44,14 +55,13 @@ def get_price():
         return f"Fejl: {e}"
 
 
-# husk sidste pris
 last_price = None
 
 while True:
     price = get_price()
 
     if price != last_price:
-        send(f"✈️ Playitas pris:\n{price}")
+        send(f"✈️ Playitas (PRÆCIS)\n{price}")
         last_price = price
 
     time.sleep(86400)
